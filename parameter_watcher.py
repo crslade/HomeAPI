@@ -25,46 +25,20 @@ def find_relevant_conditions(paramID):
   return conditions
 
 
-def test_condition(condition,paramValue,causingParamID):
-  secondValue = ""
-  firstValue = ""
-  tolerance = int(condition['tolerance']) if 'tolerance' in condition else 0
-  if condition['comparisonType'] == 'static':
-    if not 'comparisonValue' in condition:
-      raise BadConditionException("Missing comparisonValue in static condition.")
-    secondValue = condition['comparisonValue']
-    firstValue = paramValue
-  else:
-    print("Dynamic Comparison")
-    if causingParamID == condition['paramID']:
-      firstValue = paramValue
-      secondValue = get_param_value(condition['comparisonParameter'])
-    elif causingParamID == condition['comparisonParameter']:
-      secondValue = paramValue
-      firstValue = get_param_value(condition['paramID'])
+def test_condition(condition,paramValue):
+  cmpParamIDs = condition['cmpParamIDs']
+  cmpParamValues = []
+  for cmpParamID in cmpParamIDs:
+    param = get_table_ref('PARAMETERS').query(KeyConditionExpression=Key('uuid').eq(paramID))   
+    if param['paramType'] == "string":
+      cmpParamValues.append(param['paramvalue'])
+    elif param['paramType'] == "number":
+      cmpParamValues.append(int(param['paramvalue']))
+    elif param['paramType'] == "bool":
+      cmpParamValues.append(param['paramvalue'] in 'true')
     else:
-      raise BadConditionException("Condition does not include the parameter that chagned.")
-  
-  print("First Value = "+firstValue)
-  print("Comparison:"+condition['comparison'])
-  print("Second Value = "+secondValue)
-  print("Tolerance = "+str(tolerance))
-  if condition['comparison'] == ">":
-    return int(firstValue) > int(secondValue) + tolerance
-  elif condition['comparison'] == "<":
-    return int(firstValue) < int(secondValue) - tolerance
-  elif tolerance == 0:    
-    return firstValue == secondValue
-  else:
-    return int(secondValue)-2 <= int(firstValue) and int(secondValue)+2 >= int(firstValue)
-  
-
-def get_param_value(paramID):
-  param = load_parameter(paramID)
-  if not 'paramValue' in param:
-    return "0" #might not be set yet
-  else:
-    return param['paramValue']
+      raise BadConditionException("Bad parameter type")
+  return eval(condition['expression'])
 
 def fire_action(actionID):
   print("Firing Action")

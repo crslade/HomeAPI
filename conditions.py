@@ -15,19 +15,10 @@ def create_condition(conditionData):
     raise ParameterException(400, "Invalid Parameters: Missing actoinID")
   if not 'paramID' in conditionData:
     raise ParameterException(400, "Invalid Parameters: Missing paramID")
-  if not 'comparison' in conditionData:
-    raise ParameterException(400, "Invalid Parameters: Missing comparison")
-  if not 'comparisonType' in conditionData:
-    conditionData['comparisonType'] = 'static'
-    
-  #Make sure condition makes sense
-  if conditionData['comparisonType'] == 'dynamic':
-    if not 'comparisonParameter' in conditionData:
-      raise ParameterException(400, "Invalid Parameters: Missing comparisonParameter for dynamic comparison")
-  else:
-    conditionData['comparisonType'] = 'static' #make sure it isn't another value
-    if not 'comparisonValue' in conditionData:
-      raise ParameterException(400, "Invalid Parameters: Missing comparisonValue for static comparison")
+  if not 'expression' in conditionData:
+    raise ParameterException(400, "Invalid Parameters: Missing expression")
+  if not 'cmpParamIDs' in conditionData and 'cmpParamValues' in conditionData['expression']:
+      raise ParameterException(400, "Invalid Parameters: Missing cmpParamIDs")
   
   uid = uuid().hex
   nowtime = datetime.now().isoformat()
@@ -35,20 +26,13 @@ def create_condition(conditionData):
       'uuid': uid,
       'actionID': conditionData['actionID'],
       'conditionName': conditionData['conditionName'],
+      'expression': conditionData['expression'],
       'paramID': conditionData['paramID'],
-      'comparison': conditionData['comparison'],
-      'comparisonType': conditionData['comparisonType'],
       'created_at': nowtime,
       'updated_at': nowtime
   }
-  if conditionData['comparisonType'] == 'dynamic':
-    condition['comparisonParameter'] = conditionData['comparisonParameter']
-  else:
-    condition['comparisonValue'] = conditionData['comparisonValue']
-  if 'tolerance' in conditionData:
-    condition['tolerance'] = conditionData['tolerance']
-  
-  
+  if 'cmpParamIDs' in conditionData:
+    condition['cmpParamIDs'] = conditionData['cmpParamIDs']   
   conditions_table().put_item(Item=condition)
 
   response = {
@@ -100,21 +84,12 @@ def update_condition(conditionID,conditionData):
   if 'paramID' in conditionData:
     updateExpressions.append("paramID = :p")
     attributeValues[':p'] = conditionData['paramID']
-  if 'comparison' in conditionData:
-    updateExpressions.append("comparison = :c")
-    attributeValues[':c'] = conditionData['comparison']
-  if 'comparisonValue' in conditionData and comparisonType == 'static':
-    updateExpressions.append("comparisonValue = :v")
-    attributeValues[':v'] = conditionData['comparisonValue']   
-  if 'comparisonType' in conditionData:
-    updateExpressions.append("comparisonType = :t")
-    attributeValues[':t'] = conditionData['comparisonType']
-  if 'comparisonParameter' in conditionData and comparisonType == 'dynamic':  
-    updateExpressions.append("comparisonParameter = :t")
-    attributeValues[':t'] = conditionData['comparisonParameter']
-  if 'tolerance' in conditionData:
-    updateExpressions.append("tolerance = :o")
-    attributeValues[':o'] = conditionData["tolerance"]
+  if 'expression' in conditionData:
+    updateExpressions.append("expression = :e")
+    attributeValues[':e'] = conditionData['expression']
+  if 'cmpParamIDs' in conditionData:
+    updateExpressions.append("cmpParamIDs = :c")
+    attributeValues[':c'] = conditionData['cmpParamIDs']
     
   if len(updateExpressions) < 1:
     #error if not updating anything
