@@ -54,7 +54,7 @@ def create_condition(conditionData):
   response = {
       "isBase64Encoded": "false",
       "statusCode": 200,
-      "body": "{\"condition\": "+json.dumps(condition)+" }"
+      "body": json.dumps(condition)
   }
     
   return response
@@ -89,6 +89,7 @@ def update_condition(conditionID,conditionData):
   print("Updating Condition")
   condition = load_condition(conditionID)#verifies condition exists
   comparisonType = conditionData['comparisonType'] if 'comparisonType' in conditionData else condition['comparisonType']
+  print(comparisonType)
   updateExpressions=[]
   attributeValues={}
   if 'conditionName' in conditionData:
@@ -110,8 +111,8 @@ def update_condition(conditionID,conditionData):
     updateExpressions.append("comparisonType = :t")
     attributeValues[':t'] = conditionData['comparisonType']
   if 'comparisonParameter' in conditionData and comparisonType == 'dynamic':  
-    updateExpressions.append("comparisonParameter = :t")
-    attributeValues[':t'] = conditionData['comparisonParameter']
+    updateExpressions.append("comparisonParameter = :v")
+    attributeValues[':v'] = conditionData['comparisonParameter']
   if 'tolerance' in conditionData:
     updateExpressions.append("tolerance = :o")
     attributeValues[':o'] = conditionData["tolerance"]

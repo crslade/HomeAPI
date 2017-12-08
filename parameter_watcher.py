@@ -45,7 +45,7 @@ def test_condition(condition,paramValue,causingParamID):
     else:
       raise BadConditionException("Condition does not include the parameter that changed.")
   else:
-    raise BadConditionException("Invalid comparisonType. Must be 'dyanmic' or 'static'.")
+    raise BadConditionException("Invalid comparisonType. Must be 'dynamic' or 'static'.")
   
   print("First Value = "+firstValue)
   print("Comparison:"+condition['comparison'])
